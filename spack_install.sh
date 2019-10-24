@@ -127,6 +127,16 @@ echo "Temporary directory: $TMPDIR"
 # Clean previous .spack configuration if exists
 rm -rf $TMPDIR/.spack
 
+# Identify buildtype (Release or nightly)
+if [[ $prefix == *releases* ]]; then
+  # Releases
+  buildtype="releases"
+  EOS_BUILDCACHE_PATH=/eos/project/f/fccsw-web/www/binaries/releases
+else
+  buildtype="nightlies"
+  EOS_BUILDCACHE_PATH=/eos/project/f/fccsw-web/www/binaries/nightlies
+fi
+
 # split original platform string into array using '-' as a separator
 # example: x86_64-slc6-gcc62-opt
 TARGET_PLATFORM="$platform"
@@ -273,10 +283,8 @@ sed "s@{{COMPILER}}@`echo ${!compilerversion}`@"  $THIS/config/patchelf.yaml >> 
 # Use a default compiler taken from cvmfs/sft.cern.ch
 source /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!compilerversion}binutils/x86_64-${OS}/setup.sh
 
-# Create mirrors.yaml to use local buildcache
-if [ "$buildcache" != "" ]; then
-  spack mirror add local_buildcache $buildcache
-fi
+# Create mirrors.yaml to use external buildcache locate in EOS
+spack mirror add eos_buildcache $EOS_BUILDCACHE_PATH
 
 echo "Mirror configuration:"
 spack mirror list
