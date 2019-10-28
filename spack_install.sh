@@ -131,10 +131,10 @@ rm -rf $TMPDIR/.spack
 if [[ $prefix == *releases* ]]; then
   # Releases
   buildtype="releases"
-  EOS_BUILDCACHE_PATH=http://fccsw.web.cern.ch/fccsw/binaries/releases
+  EOS_BUILDCACHE_PATH=/eos/project/f/fccsw-web/www/binaries/releases
 else
   buildtype="nightlies"
-  EOS_BUILDCACHE_PATH=http://fccsw.web.cern.ch/fccsw/binaries/nightlies
+  EOS_BUILDCACHE_PATH=/eos/project/f/fccsw-web/www/binaries/nightlies
 fi
 
 # split original platform string into array using '-' as a separator
