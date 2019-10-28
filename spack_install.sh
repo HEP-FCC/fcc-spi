@@ -289,6 +289,11 @@ spack mirror add eos_buildcache $EOS_BUILDCACHE_PATH
 echo "Mirror configuration:"
 spack mirror list
 
+# Fetch all remote information from the buildcache
+echo "Fetching information from buildcache..."
+spack buildcache list > /dev/null
+
+
 if [[ "$package" == "fccsw" ]]; then
   # Configure upstream installation in cvmfs
   cp $THIS/config/upstreams.tpl $SPACK_CONFIG/upstreams.yaml
