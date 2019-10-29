@@ -278,7 +278,7 @@ cat $THIS/config/config.yaml > $SPACK_CONFIG/config.yaml
 
 # Use a default patchelf installed in fcc.cern.ch
 # spack buildcache tries to install it if it is not found
-sed "s@{{COMPILER}}@`echo ${!compilerversion}`@"  $THIS/config/patchelf.yaml >> $SPACK_CONFIG/linux/packages.yaml
+#sed "s@{{COMPILER}}@`echo ${!compilerversion}`@"  $THIS/config/patchelf.yaml >> $SPACK_CONFIG/linux/packages.yaml
 
 # Use a default compiler taken from cvmfs/sft.cern.ch
 source /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!compilerversion}binutils/x86_64-${OS}/setup.sh
@@ -288,11 +288,6 @@ spack mirror add eos_buildcache $EOS_BUILDCACHE_PATH
 
 echo "Mirror configuration:"
 spack mirror list
-
-# Fetch all remote information from the buildcache
-echo "Fetching information from buildcache..."
-spack buildcache list > /dev/null
-
 
 if [[ "$package" == "fccsw" ]]; then
   # Configure upstream installation in cvmfs
@@ -355,6 +350,9 @@ spack config get compilers
 # spack buildcache install -u patchelf
 # check_error $? "spack buildcache install patchelf"
 
+# Install patchelf for later relocation
+spack install --no-cache patchelf
+
 # Install binaries from buildcache
 echo "Installing $package binary"
 
@@ -362,7 +360,7 @@ if [[ "$package" == "fccsw" ]]; then
    spack buildcache install -u /$pkghash
    check_error $? "spack buildcache install -u ($package)/$pkghash"
 else
-   spack buildcache install -u -f -a /$pkghash
+   spack buildcache install -u -f -a /$pkghash | grep -v "==> Fetching"
    check_error $? "spack buildcache install -u -f -a ($package)/$pkghash"
 fi
 
@@ -452,3 +450,11 @@ if [ "$cleanup" = true ]; then
 fi
 
 echo "End of build"
+
+echo "Summary of the build"
+python -c 'print "\n"*5'
+python -c 'print "="*80'
+spack find -p 
+echo ""
+python -c 'print "="*80'
+python -c 'print "\n"*5'
