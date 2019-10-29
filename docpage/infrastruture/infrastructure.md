@@ -8,11 +8,9 @@ FCC Software Infrastructure
 Table of Content:
 
 - Main components
-- Workflow
-- Releases
+- Building the stack
 - Nightlies
-- Using the FCC Software
-
+- Releases
 
 ## Main components
 
@@ -41,7 +39,7 @@ Repositories on this project can be classified on three main categories:
 
 ### Jenkins
 
-FCC makes use of the Jenkins server hosted and mantained by the EP-SFT team: [https://epsft-jenkins.cern.ch](https://epsft-jenkins.cern.ch).
+FCC makes use of the Jenkins server hosted and maintained by the EP-SFT team: [https://epsft-jenkins.cern.ch](https://epsft-jenkins.cern.ch).
 Inside this server, there is a dedicated view for the [FCC Projects](https://epsft-jenkins.cern.ch/view/FCC/).
 
 Current operations run through Jenkins are:
@@ -62,6 +60,9 @@ For each package configured with this continuous integration process we have thr
 
 In the case of FCCSW the result of the last job (`<package_name>-pullrequest-build`) the result of the CMake build and tests is reported
 to the CDash dashboard and grouped into a [slot dedicated to Pull Requests](https://cdash.cern.ch/index.php?project=FCC#PullRequests).
+
+The connection between Jenkins and Github is done through [this code](https://github.com/HEP-FCC/jenkins-pipelines). To add new platforms to the default configuration where pull-requests run on, add them to
+[this file](https://github.com/HEP-FCC/jenkins-pipelines/blob/master/src/cern/root/pipeline/BuildConfiguration.groovy#L28-L35).
 
 **Nightlies**
 
@@ -368,4 +369,75 @@ We call `fcc-externals` to the group of packages which are FCC-specific or not p
 
 ## Nightlies
 
-**ToDo**
+FCC Nightlies are built using Spack as described before. Additionally, the corresponding Jenkins jobs are configured to generate binary files out of each installed package such that they can be installed and relocated into the CVMFS repository.
+
+Nightlies are built using the Jenkins job [FCC-nightlies](https://epsft-jenkins.cern.ch/view/FCC/job/FCC-nightlies/), which runs everyday at 15:25. At this time, the LCG builds should be already present in CVMFS in case of building against one of the development version (`dev3`, `dev4`). Otherwise, the build gets aborted.
+
+### Manual builds
+
+Nightly builds can be [manually triggered](https://epsft-jenkins.cern.ch/view/FCC/job/FCC-nightlies/build):
+
+![](../images/fcc-nightlies-build.png)
+
+- `LCG_VERSION`: LCG version to build against. It must be a valid release or nightly version and be already available in CVMFS.
+- `FCC_VERSION`: Version of the FCC Externals to be installed. This is the equivalent to the `heptools-<VERSION>` files in LCGCMake. The specify `FCC_VERSION` will determine the `packages-<FCC_VERSION>.yaml` file picked from the `config` directory on the `fcc-spi` repository.
+- `Combinations`: Each marked combination will spawn a different build for the compiler and operating system specified. By default, `gcc8` and `centos7`, `slc6` are marked.
+- `CVMFS_INSTALL`: This flags determines whether the built packages should be install to CVMFS. If not marked, it will just build the required packages in a build node, without installing in CVMFS, which a good way to debug or to check that the build part is properly working for a given combination of options.
+- `GITHUB_FCCSPACK_REPO`: Specify the Branch/Tag to be cloned from [https://github.com/HEP-FCC/fcc-spack](https://github.com/HEP-FCC/fcc-spack). This allows us to go back in time to previous releases of the different repositories required at build time.
+- `GITHUB_FCCSPI_REPO`: Same as before, but for the `fcc-spi` repository.
+
+### Build configuration
+
+As for the internal configuration of the job itself, the shell script does the heavy lifting:
+
+- Read the environment variables set by Jenkins and creates a `setup.sh` script with their values, so in case of debugging one can just source this script and get the same environment as for the build job.
+- Run `fcc-spi/jk-setup-spack.sh` to download spack, clone some required spack `repos` (`hep-spack` and `fcc-spack`) with non-official spack recipes and place then at the correct location (`spack/var/spack/repos`).
+- Setup the CDash options to send build results to server.
+- Install the FCC software stack for the specified compiler. In particular it installs `fccdevel` which is a dummy package that contains all the fcc-externals declared as dependencies.
+- Get hash of the installed package, this hash identifies our whole installation so we can reproduce the same build, ensuring the same combination of hashes for every installed package, i.e. our dummy package `fccdevel` and all its dependencies (`podio`, `fcc-edm`, ...).
+- If the `CVMFS_INSTALL` flag was enabled:
+  + Install patchelf, since this packages is needed to create the binary files.
+  + Generate binary files (equivalent to tarfiles in LCGCMake) and place them on the buildcache located in EOS: /eos/project/f/fccsw-web/www/binaries/ (also accessible through the [website](http://fccsw.web.cern.ch/fccsw/binaries/))
+  + Dump all relevant environment variables to a file which is then use on [FCC-cvmfs-install-nightlies](https://epsft-jenkins.cern.ch/view/FCC/job/FCC-cvmfs-install-nightlies/) to reproduce the same environment.
+- Finally prints a summary of the installed packages and its location, since they will be either taken from CVMFS or locally installed in the machine.
+
+Note that if the build part did not success, then the installation to CVMFS will be aborted and hence the [FCC-cvmfs-install-nightlies](https://epsft-jenkins.cern.ch/view/FCC/job/FCC-cvmfs-install-nightlies/) will not be run.
+
+
+## Releases
+
+Releases are equivalent to nightly builds but the installation to CVMFS is done in a different path. The jenkins job is charge of the releases is [FCC-release-spack](https://epsft-jenkins.cern.ch/view/FCC/job/FCC-release-spack/) and the way to manually trigger it is exactly the same as for the nightlies.
+
+## Publishing
+
+There are two jobs in charge of the publishing part:
+
+- [FCC-cvmfs-install-nightlies](https://epsft-jenkins.cern.ch/view/FCC/job/FCC-cvmfs-install-nightlies/): Deploy the result of *FCC-nightlies* to CVMFS.
+- [FCC-cvmfs-install](https://epsft-jenkins.cern.ch/view/FCC/job/FCC-cvmfs-install/): Deploy the result of *FCC-release-spack* to CVMFS.
+
+These jobs only run if the build of the packages worked without errors in the build nodes. Both jobs basically run the `fcc-spi/spack-install.sh` script. The jenkins configuration of both jobs is similar:
+
+- Check the package to be installed (`fccsw` or fcc-externals) and define the prefix path in CVMFS (destination directory)
+- Define the directory where the view will be Created
+- Log in as a cvmfs user:
+  + cvfccnight: for nightlies
+  + cvfcc: for releases
+- Get access to EOS (to get binaries from the buildcache) through the fccnight user (keytab file is available in the HOME directory of each user)
+- Open a cvmfs transaction:
+  + fcc.cern.ch: for releases
+  + fcc-nightlies.cern.ch: for nightlies
+- Execute the `spack_install.sh` script, which does everything related to the publication.
+- If the transaction succeeded, then the transaction gets published, otherwise it is aborted.
+
+More in detail, `spack_install.sh` starts setting up the environment and cloning all the external repositories required (spack and spack repositories for recipes), similarly to `fcc-spi/jk-setup-spack.sh`.
+Additionally, it also identifies:
+- Target platform: the platform that needs to be installed into cvmfs (i.e. the platform for which the binaries were produce - this can be `centos` or `slc6` at the time of writing)
+- Host platform: the platform where spack is running. In cvmfs this is SLC6.
+
+This distinction needs to be done since spack requires a compiler from the platform where it is running (SLC6) and, at the same time, requires access to the compiler of the platform that it is installing (`centos` or `slc6`).
+
+After that, we force the prefix where the packages will be installed (by modifying the `config.yaml` configuration file).
+
+If the package to be installed is `fccsw` then, spack is configure to reuse all the fcc-externals previously installed in CVMFS (make use of `$SPACK_CONFIG/upstreams.yaml` - that allows incremental builds against other spack installations). Otherwise, the fcc-externals are installed. In both cases, the packages are installed from the binary files locate in EOS (`/eos/project/f/fccsw-web/www/binaries/` - we need to use the access through the EOS project mounted on the volume, since the remote access through the website shows a different behaviour and platforms are not properly identified).
+
+Once the binaries have been installed, the view is created together with a `setup.sh` script to use it. Finally the workspace inside the CVMFS stratum 0 node is removed if everything worked.
