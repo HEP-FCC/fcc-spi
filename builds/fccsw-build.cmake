@@ -53,7 +53,7 @@ set(CTEST_BUILD_COMMAND "make -j${ncpu}")
 
 
 # not a ctest variable, but used in custom cmake macro
-set(CTEST_TEST_PARALLEL_LEVEL 4)
+set(CTEST_TEST_PARALLEL_LEVEL ${ncpu})
 
 set(CTEST_TEST_LOAD ${ncpu})
 
