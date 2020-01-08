@@ -6,14 +6,8 @@
     version: [0.1.0]
   papas:
     version: [1.2.1]
-  podio:
-    version: [0.9.1]
-  acts-core:
-    version: [0.07.01]
   heppy:
-    version: [2.0]
-  tricktrack:
-    version: [1.0.8]
+    version: [2.1]
   py-fcchhanalyses:
     version: [0.1.1]
   guinea-pig:
