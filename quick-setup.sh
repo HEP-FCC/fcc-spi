@@ -6,7 +6,7 @@
 #     source fcc-spi/quick-setup.sh
 #
 
-export LCG_VERSION=LCG_96b
+export LCG_VERSION=LCG_96c_LS
 export FCC_VERSION=develop
 export COMPILER=gcc8
 export BUILDTYPE=Release

@@ -13,7 +13,7 @@ fi
 THIS=$(dirname ${BASH_SOURCE[0]})
 
 # Detect platform
-TOOLSPATH=/cvmfs/fcc.cern.ch/sw/0.8.3/tools/
+TOOLSPATH=/cvmfs/fcc.cern.ch/contrib/tools/
 if [[ $BUILDTYPE == *Release* ]]; then
   export PLATFORM=`python $TOOLSPATH/hsf_get_platform.py --compiler $COMPILER --buildtype opt`
 else
