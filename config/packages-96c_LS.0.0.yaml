@@ -1,5 +1,5 @@
   fccsw:
-    version: [develop]
+    version: [v0.12]
   fcc-edm:
     version: [0.5.5]
   fcc-edm-legacy:
