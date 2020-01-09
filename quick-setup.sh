@@ -7,7 +7,7 @@
 #
 
 export LCG_VERSION=LCG_96c_LS
-export FCC_VERSION=develop
+export FCC_VERSION=96c_LS.0.0
 export COMPILER=gcc8
 export BUILDTYPE=Release
 export weekday=`date +%a`

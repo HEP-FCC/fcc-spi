@@ -3,7 +3,7 @@
   fcc-edm:
     version: [0.5.5]
   fcc-edm-legacy:
-    version: [0.1.0]
+    version: [0.1.1]
   papas:
     version: [1.2.2]
   heppy:
