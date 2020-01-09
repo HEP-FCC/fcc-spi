@@ -164,10 +164,10 @@ else
   export PLATFORM=`python $TOOLSPATH/hsf_get_platform.py --compiler $TARGET_COMPILER --buildtype dbg`
 fi
 
-if [[ $PLATFORM != $platform ]]; then
-  echo "Replacing platform, from: $platform, to: $PLATFORM"
-  platform=$PLATFORM
-fi
+#if [[ $PLATFORM != $platform ]]; then
+#  echo "Replacing platform, from: $platform, to: $PLATFORM"
+#  platform=$PLATFORM
+#fi
 
 # assign new platform values
 IFS=- read -ra PART <<< "$platform"
