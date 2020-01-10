@@ -290,7 +290,7 @@ echo "Mirror configuration:"
 spack mirror list
 spack buildcache keys
 
-if [[ "$package" == "fccsw" ]]; then
+if [[ "$package" == "fccswSKIPTHIS" ]]; then
   # Configure upstream installation in cvmfs
   cp $THIS/config/upstreams.tpl $SPACK_CONFIG/upstreams.yaml
 
