@@ -17,4 +17,7 @@ set -e
 make purge
 
 #---Run build-------------------------------------------------------------------------------
-ctest -V -S $WORKSPACE/fcc-spi/builds/fccsw-build.cmake
+#ctest -V -S $WORKSPACE/fcc-spi/builds/fccsw-build.cmake
+
+make -j `getconf _NPROCESSORS_ONLN`
+make test
