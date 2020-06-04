@@ -55,7 +55,10 @@ set(CTEST_BUILD_COMMAND "make -j${ncpu}")
 # not a ctest variable, but used in custom cmake macro
 set(CTEST_TEST_PARALLEL_LEVEL ${ncpu})
 
-set(CTEST_TEST_LOAD ${ncpu})
+cmake_host_system_information(RESULT MEM QUERY AVAILABLE_PHYSICAL_MEMORY)
+math(EXPR memlimit "${MEM} / 2000")
+
+set(CTEST_TEST_LOAD ${memlimit})
 
 
 
