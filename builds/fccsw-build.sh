@@ -7,14 +7,6 @@ touch $WORKSPACE/controlfile
 
 #---Set up environment----------------------------------------------------------------------
 cd $WORKSPACE/fccsw
-source $WORKSPACE/fccsw/init.sh
-env | sort
-
-#---Exit immediately after non-zero return code---------------------------------------------
-set -e
-
-#---Clean build folder----------------------------------------------------------------------
-make purge
-
-#---Run build-------------------------------------------------------------------------------
-ctest -V -S $WORKSPACE/fcc-spi/builds/fccsw-build.cmake
+source init.sh
+make -j `getconf _NPROCESSORS_ONLN`
+make -j `getconf _NPROCESSORS_ONLN` test
